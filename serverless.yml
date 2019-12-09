@@ -1,0 +1,32 @@
+service: csharp
+
+provider:
+  name: aws
+  runtime: dotnetcore2.1
+  region: eu-west-2
+  memorySize: 128
+  stage: ${opt:stage, 'dev'}
+  role: ${file(./config/config.${self:provider.stage}.json):role}
+  vpc:
+    securityGroupIds:
+      - ${file(./config/config.${self:provider.stage}.json):SecurityGroup}
+    subnetIds:
+      - ${file(./config/config.${self:provider.stage}.json):Subnet1}
+      - ${file(./config/config.${self:provider.stage}.json):Subnet2}
+
+package:
+  individually: true
+
+functions:
+  calculator:
+    handler: CsharpHandlers::AwsDotnetCsharp.Handler::Calculator
+    events:
+      - http:
+          method: post
+          path: getPayment
+          cors: true    
+
+    # you can add packaging information here
+    package:
+      artifact: bin/release/netcoreapp2.1/calculator.zip
+
